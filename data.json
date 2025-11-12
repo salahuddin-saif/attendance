@@ -1,0 +1,14 @@
+{
+  "employees": [],
+  "attendance": [],
+  "admin_users": [
+    {
+      "id": 1,
+      "username": "admin",
+      "password": "admin123",
+      "email": "admin@company.com"
+    }
+  ],
+  "activity_log": []
+}
+

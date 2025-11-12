@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Attendance System</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <i>👤</i> Attendance System
+                </div>
+                <nav>
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="register.html">Register</a></li>
+                        <li><a href="attendance.html">Attendance</a></li>
+                        <li><a href="admin.html">Admin Panel</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <div class="main-content">
+        <div class="container">
+            <h1 class="page-title">Welcome to Attendance System</h1>
+            <div class="card">
+                <h2>Employee Attendance System</h2>
+                <p>This system allows employees to register and mark their attendance using employee ID.</p>
+                
+                <div class="stats-container" id="stats-container">
+                    <div class="stat-card">
+                        <div class="stat-number" id="total-employees">0</div>
+                        <div class="stat-label">Total Employees</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="present-today">0</div>
+                        <div class="stat-label">Present Today</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="absent-today">0</div>
+                        <div class="stat-label">Absent Today</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="attendance-rate">0%</div>
+                        <div class="stat-label">Attendance Rate</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2023 Attendance System - Employee Attendance System. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="assets/js/database.js"></script>
+    <script src="assets/js/utils.js"></script>
+    <script>
+        // Load statistics on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const stats = db.getAttendanceStats();
+            
+            document.getElementById('total-employees').textContent = stats.total_employees;
+            document.getElementById('present-today').textContent = stats.present_today;
+            document.getElementById('absent-today').textContent = stats.absent_today;
+            document.getElementById('attendance-rate').textContent = stats.attendance_rate_today + '%';
+        });
+    </script>
+</body>
+</html>
+

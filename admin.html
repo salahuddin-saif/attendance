@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Attendance System</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <i>👤</i> Attendance System
+                </div>
+                <nav>
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="register.html">Register</a></li>
+                        <li><a href="attendance.html">Attendance</a></li>
+                        <li><a href="admin.html">Admin Panel</a></li>
+                        <li><a href="#" id="logout-link" class="btn btn-danger">Logout</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <div class="main-content">
+        <div class="container">
+            <h1 class="page-title">
+                Admin Panel 
+                <small style="font-size: 0.6em; color: var(--gray);">
+                    Welcome, <span id="admin-username"></span>!
+                </small>
+            </h1>
+
+            <div id="alert-container"></div>
+
+            <div class="card">
+                <h2>Today's Attendance Overview</h2>
+                <div class="stats-container">
+                    <div class="stat-card">
+                        <div class="stat-number" id="present-today">0/0</div>
+                        <div class="stat-label">Present Today</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="attendance-rate-today">0%</div>
+                        <div class="stat-label">Today's Rate</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="attendance-rate-week">0%</div>
+                        <div class="stat-label">This Week</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="attendance-rate-month">0%</div>
+                        <div class="stat-label">This Month</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Department-wise Attendance</h2>
+                <div class="table-container">
+                    <table id="department-table">
+                        <thead>
+                            <tr>
+                                <th>Department</th>
+                                <th>Total Employees</th>
+                                <th>Present Today</th>
+                                <th>Attendance Rate</th>
+                            </tr>
+                        </thead>
+                        <tbody id="department-tbody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Today's Attendance Records - <span id="today-date"></span></h2>
+                <div class="table-container">
+                    <table id="attendance-table">
+                        <thead>
+                            <tr>
+                                <th>Employee ID</th>
+                                <th>Name</th>
+                                <th>Department</th>
+                                <th>Position</th>
+                                <th>Check-in Time</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="attendance-tbody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Quick Actions</h2>
+                <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                    <a href="register.html" class="btn">Register New Employee</a>
+                    <a href="attendance.html" class="btn btn-success">Mark Attendance</a>
+                    <a href="employee_management.html" class="btn">Manage Employees</a>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Manual Attendance Entry</h2>
+                <form id="manual-attendance-form" class="form-grid">
+                    <div class="form-group">
+                        <label for="manual_employee_id">Employee</label>
+                        <select id="manual_employee_id" name="manual_employee_id" required>
+                            <option value="">Select Employee</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="manual_date">Date</label>
+                        <input type="date" id="manual_date" name="manual_date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="manual_time">Check-in Time</label>
+                        <input type="time" id="manual_time" name="manual_time" required>
+                    </div>
+                    <div class="form-group" style="align-self: flex-end;">
+                        <button type="submit" class="btn btn-success">Record Attendance</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="card">
+                <h2>Attendance Export</h2>
+                <form id="export-form" class="form-grid">
+                    <div class="form-group">
+                        <label for="start_date">Start Date</label>
+                        <input type="date" id="start_date" name="start_date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="end_date">End Date</label>
+                        <input type="date" id="end_date" name="end_date" required>
+                    </div>
+                    <div class="form-group" style="align-self: flex-end;">
+                        <button type="submit" class="btn btn-danger">Download CSV</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2023 Attendance System - Employee Attendance System. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="assets/js/database.js"></script>
+    <script src="assets/js/auth.js"></script>
+    <script src="assets/js/utils.js"></script>
+    <script>
+        // Check authentication
+        if (!auth.requireLogin()) {
+            // Redirect will happen in auth.js
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set admin username
+            const session = auth.getSession();
+            if (session) {
+                document.getElementById('admin-username').textContent = session.username;
+            }
+
+            // Set today's date
+            const today = new Date();
+            document.getElementById('today-date').textContent = today.toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+
+            // Load statistics
+            loadStatistics();
+            
+            // Load department attendance
+            loadDepartmentAttendance();
+            
+            // Load today's attendance
+            loadTodaysAttendance();
+            
+            // Load employees for manual entry
+            loadEmployeesForManualEntry();
+
+            // Set default dates for export
+            const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+            document.getElementById('start_date').value = firstDay.toISOString().split('T')[0];
+            document.getElementById('end_date').value = today.toISOString().split('T')[0];
+            document.getElementById('manual_date').value = today.toISOString().split('T')[0];
+            document.getElementById('manual_time').value = today.toTimeString().slice(0, 5);
+
+            // Manual attendance form
+            document.getElementById('manual-attendance-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const employeeId = document.getElementById('manual_employee_id').value;
+                const date = document.getElementById('manual_date').value;
+                const time = document.getElementById('manual_time').value;
+
+                if (!employeeId) {
+                    showAlert('Please select an employee.', 'error');
+                    return;
+                }
+
+                const employee = db.getEmployee(employeeId);
+                if (!employee) {
+                    showAlert('Employee not found.', 'error');
+                    return;
+                }
+
+                // Check if attendance already exists for this date
+                if (db.hasAttendanceOnDate(employeeId, date)) {
+                    showAlert('Attendance already recorded for this employee on the selected date.', 'error');
+                    return;
+                }
+
+                // Mark attendance with custom date/time
+                const dateTime = `${date}T${time}:00`;
+                if (db.markAttendance(employeeId, dateTime)) {
+                    showAlert(`Attendance recorded for ${employee.full_name} (${employeeId}).`, 'success');
+                    loadTodaysAttendance();
+                    loadStatistics();
+                    loadDepartmentAttendance();
+                } else {
+                    showAlert('Unable to record attendance. Please try again.', 'error');
+                }
+            });
+
+            // Export form
+            document.getElementById('export-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const startDate = document.getElementById('start_date').value;
+                const endDate = document.getElementById('end_date').value;
+                exportAttendanceToCSV(startDate, endDate);
+                showAlert('Attendance data exported successfully!', 'success');
+            });
+
+            // Logout
+            document.getElementById('logout-link').addEventListener('click', function(e) {
+                e.preventDefault();
+                auth.logout();
+                window.location.href = 'admin_login.html';
+            });
+        });
+
+        function loadStatistics() {
+            const stats = db.getAttendanceStats();
+            document.getElementById('present-today').textContent = `${stats.present_today}/${stats.total_employees}`;
+            document.getElementById('attendance-rate-today').textContent = stats.attendance_rate_today + '%';
+            document.getElementById('attendance-rate-week').textContent = stats.attendance_rate_week + '%';
+            document.getElementById('attendance-rate-month').textContent = stats.attendance_rate_month + '%';
+        }
+
+        function loadDepartmentAttendance() {
+            const deptStats = db.getDepartmentAttendance();
+            const tbody = document.getElementById('department-tbody');
+            
+            if (deptStats.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">No department data available</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = deptStats.map(dept => {
+                const rate = dept.total_employees > 0 
+                    ? Math.round((dept.present_today / dept.total_employees) * 100 * 10) / 10 
+                    : 0;
+                return `
+                    <tr>
+                        <td>${dept.department.toUpperCase()}</td>
+                        <td>${dept.total_employees}</td>
+                        <td>${dept.present_today}</td>
+                        <td>${rate}%</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function loadTodaysAttendance() {
+            const attendance = db.getTodaysAttendance();
+            const employees = db.getEmployees();
+            const tbody = document.getElementById('attendance-tbody');
+            
+            if (attendance.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No attendance records for today</td></tr>';
+                return;
+            }
+
+            // Create employee map for quick lookup
+            const employeeMap = {};
+            employees.forEach(emp => {
+                employeeMap[emp.employee_id] = emp;
+            });
+
+            tbody.innerHTML = attendance.map(att => {
+                const employee = employeeMap[att.employee_id];
+                if (!employee) return '';
+                
+                return `
+                    <tr>
+                        <td>${employee.employee_id}</td>
+                        <td>${employee.full_name}</td>
+                        <td>${employee.department}</td>
+                        <td>${employee.position}</td>
+                        <td>${formatTime(att.check_in)}</td>
+                        <td class="status-${att.status}">${att.status.charAt(0).toUpperCase() + att.status.slice(1)}</td>
+                        <td>
+                            <button class="btn btn-danger" onclick="deleteAttendance(${att.id})" style="padding: 0.4rem 0.8rem;">Delete</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function loadEmployeesForManualEntry() {
+            const employees = db.getEmployees();
+            const select = document.getElementById('manual_employee_id');
+            
+            select.innerHTML = '<option value="">Select Employee</option>' + 
+                employees.map(emp => 
+                    `<option value="${emp.employee_id}">${emp.full_name} (${emp.employee_id})</option>`
+                ).join('');
+        }
+
+        function deleteAttendance(attendanceId) {
+            if (!confirm('Delete this attendance record?')) {
+                return;
+            }
+
+            if (db.deleteAttendance(attendanceId)) {
+                showAlert('Attendance record deleted successfully.', 'success');
+                loadTodaysAttendance();
+                loadStatistics();
+                loadDepartmentAttendance();
+            } else {
+                showAlert('Unable to delete attendance record. Please try again.', 'error');
+            }
+        }
+
+    </script>
+</body>
+</html>
+

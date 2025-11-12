@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mark Attendance - Attendance System</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <i>👤</i> Attendance System
+                </div>
+                <nav>
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="register.html">Register</a></li>
+                        <li><a href="attendance.html">Attendance</a></li>
+                        <li><a href="admin.html">Admin Panel</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <div class="main-content">
+        <div class="container">
+            <h1 class="page-title">Mark Attendance</h1>
+            <div class="card">
+                <form id="attendance-form">
+                    <div class="form-group">
+                        <label for="employee_id">Employee ID</label>
+                        <input type="text" id="employee_id" name="employee_id" placeholder="Enter your Employee ID" required autofocus>
+                    </div>
+                    <button type="submit" class="btn btn-block">Mark Attendance</button>
+                </form>
+                <div id="attendance-result" style="margin-top: 1.5rem;"></div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2023 Attendance System - Employee Attendance System. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="assets/js/database.js"></script>
+    <script src="assets/js/utils.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('attendance-form');
+            const resultDiv = document.getElementById('attendance-result');
+
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const employeeId = document.getElementById('employee_id').value.trim();
+                
+                if (!employeeId) {
+                    resultDiv.innerHTML = '<div class="alert alert-error">Please enter your Employee ID.</div>';
+                    return;
+                }
+
+                // Check if employee exists
+                const employee = db.getEmployee(employeeId);
+                if (!employee) {
+                    resultDiv.innerHTML = '<div class="alert alert-error">Employee not found. Please verify your Employee ID.</div>';
+                    return;
+                }
+
+                // Check if attendance already marked today
+                if (db.hasAttendanceToday(employeeId)) {
+                    resultDiv.innerHTML = '<div class="alert alert-error">Attendance already marked for today!</div>';
+                    return;
+                }
+
+                // Mark attendance
+                if (db.markAttendance(employeeId)) {
+                    const now = new Date();
+                    resultDiv.innerHTML = `
+                        <div class="alert alert-success">
+                            Attendance marked successfully for ${employee.full_name}!<br>
+                            Time: ${formatTime(now.toISOString())}
+                        </div>
+                    `;
+                    form.reset();
+                } else {
+                    resultDiv.innerHTML = '<div class="alert alert-error">Unable to mark attendance. Please try again.</div>';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+
