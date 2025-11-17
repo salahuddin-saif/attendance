@@ -185,3 +185,11 @@ Feel free to submit issues, fork the repository, and create pull requests for an
 
 For issues or questions, please open an issue on the GitHub repository.
 
+
+
+
+
+
+
+
+show the total present DAY number on the csv on a column. and all the user data save on a json file on the root folder of the project also and the data automatically load when the web page refresh

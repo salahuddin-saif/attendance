@@ -4,30 +4,81 @@
 class Database {
     constructor() {
         this.storageKey = 'attendance_system_db';
-        this.init();
+        this.dataFilePath = 'data.json';
+        this.data = null;
+        this.ready = this.initialize();
     }
 
-    init() {
-        // Initialize with default structure if not exists
-        if (!this.getData()) {
-            const defaultData = {
-                employees: [],
-                attendance: [],
-                admin_users: [
-                    {
-                        id: 1,
-                        username: 'admin',
-                        password: 'admin123', // Plain text for simplicity in static site
-                        email: 'admin@company.com'
-                    }
-                ],
-                activity_log: []
-            };
-            this.saveData(defaultData);
+    getDefaultData() {
+        return {
+            employees: [],
+            attendance: [],
+            admin_users: [
+                {
+                    id: 1,
+                    username: 'admin',
+                    password: 'admin123', // Plain text for simplicity in static site
+                    email: 'admin@company.com'
+                }
+            ],
+            activity_log: []
+        };
+    }
+
+    async initialize() {
+        let data = this.getLocalData();
+
+        if (!this.isValidDataStructure(data)) {
+            data = await this.fetchDataFile();
         }
+
+        if (!this.isValidDataStructure(data)) {
+            data = this.getDefaultData();
+        }
+
+        this.persistLocalData(data);
+        this.data = data;
+        return this.data;
     }
 
-    getData() {
+    onReady(callback) {
+        if (typeof callback === 'function') {
+            this.ready.then(() => callback(this.getData()));
+        }
+        return this.ready;
+    }
+
+    async fetchDataFile() {
+        try {
+            const response = await fetch(`${this.dataFilePath}?v=${Date.now()}`, {
+                cache: 'no-store'
+            });
+
+            if (!response.ok) {
+                return null;
+            }
+
+            const fileData = await response.json();
+            if (this.isValidDataStructure(fileData)) {
+                return fileData;
+            }
+        } catch (error) {
+            console.warn('Unable to load data.json file.', error);
+        }
+
+        return null;
+    }
+
+    async reloadFromDataFile() {
+        const fileData = await this.fetchDataFile();
+        if (this.isValidDataStructure(fileData)) {
+            this.saveData(fileData);
+            return fileData;
+        }
+        return null;
+    }
+
+    getLocalData() {
         try {
             const data = localStorage.getItem(this.storageKey);
             return data ? JSON.parse(data) : null;
@@ -37,15 +88,55 @@ class Database {
         }
     }
 
-    saveData(data) {
+    isValidDataStructure(data) {
+        return !!(
+            data &&
+            typeof data === 'object' &&
+            Array.isArray(data.employees) &&
+            Array.isArray(data.attendance) &&
+            Array.isArray(data.admin_users) &&
+            Array.isArray(data.activity_log)
+        );
+    }
+
+    persistLocalData(data) {
         try {
             localStorage.setItem(this.storageKey, JSON.stringify(data));
-            return true;
         } catch (e) {
-            console.error('Error saving data:', e);
-            // If localStorage is full, try to save to JSON file
-            this.exportToJSON(data);
+            console.error('Error saving data locally:', e);
+        }
+    }
+
+    getData() {
+        if (!this.data) {
+            const stored = this.getLocalData();
+            if (this.isValidDataStructure(stored)) {
+                this.data = stored;
+            } else {
+                this.data = this.getDefaultData();
+                this.persistLocalData(this.data);
+            }
+        }
+        return this.data;
+    }
+
+    saveData(data) {
+        if (!this.isValidDataStructure(data)) {
+            console.warn('Attempted to save malformed data payload.');
             return false;
+        }
+
+        this.data = data;
+        this.persistLocalData(data);
+        this.dispatchUpdateEvent();
+        return true;
+    }
+
+    dispatchUpdateEvent() {
+        if (typeof document !== 'undefined' && typeof CustomEvent !== 'undefined') {
+            document.dispatchEvent(new CustomEvent('attendance:data-updated', {
+                detail: { timestamp: Date.now() }
+            }));
         }
     }
 
@@ -345,4 +436,6 @@ class Database {
 
 // Create global database instance
 const db = new Database();
+
+
 

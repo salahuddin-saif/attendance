@@ -89,7 +89,7 @@
 
     <footer>
         <div class="container">
-            <p>&copy; 2025 Attendance System - Employee Attendance System. All rights reserved.</p>
+            <p>&copy; 2023 Attendance System - Employee Attendance System. All rights reserved.</p>
         </div>
     </footer>
 
@@ -105,19 +105,21 @@
         let currentEmployeeId = null;
 
         document.addEventListener('DOMContentLoaded', function() {
-            loadEmployees();
+            db.ready.then(() => {
+                loadEmployees();
 
-            // Edit form
-            document.getElementById('employee-edit-form').addEventListener('submit', function(e) {
-                e.preventDefault();
-                saveEmployee();
-            });
+                // Edit form
+                document.getElementById('employee-edit-form').addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    saveEmployee();
+                });
 
-            // Logout
-            document.getElementById('logout-link').addEventListener('click', function(e) {
-                e.preventDefault();
-                auth.logout();
-                window.location.href = 'admin_login.html';
+                // Logout
+                document.getElementById('logout-link').addEventListener('click', function(e) {
+                    e.preventDefault();
+                    auth.logout();
+                    window.location.href = 'admin_login.html';
+                });
             });
         });
 
@@ -223,5 +225,4 @@
     </script>
 </body>
 </html>
-
 

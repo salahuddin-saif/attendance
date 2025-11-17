@@ -52,3 +52,5 @@ class Auth {
 // Create global auth instance
 const auth = new Auth();
 
+
+

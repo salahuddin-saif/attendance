@@ -70,61 +70,65 @@
     <script src="assets/js/utils.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const form = document.getElementById('registration-form');
-            const alertContainer = document.getElementById('alert-container');
+            db.ready.then(() => {
+                const form = document.getElementById('registration-form');
+                const alertContainer = document.getElementById('alert-container');
 
-            form.addEventListener('submit', function(e) {
-                e.preventDefault();
-                
-                const employeeId = document.getElementById('employee_id').value.trim();
-                const fullName = document.getElementById('full_name').value.trim();
-                const department = document.getElementById('department').value;
-                const position = document.getElementById('position').value.trim();
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const employeeId = document.getElementById('employee_id').value.trim();
+                    const fullName = document.getElementById('full_name').value.trim();
+                    const department = document.getElementById('department').value;
+                    const position = document.getElementById('position').value.trim();
 
-                // Clear previous alerts
-                alertContainer.innerHTML = '';
+                    // Clear previous alerts
+                    alertContainer.innerHTML = '';
 
-                // Validation
-                if (!employeeId) {
-                    showAlert('Employee ID is required.', 'error');
-                    return;
-                }
-                if (!fullName) {
-                    showAlert('Full name is required.', 'error');
-                    return;
-                }
-                if (!department) {
-                    showAlert('Department is required.', 'error');
-                    return;
-                }
-                if (!position) {
-                    showAlert('Position is required.', 'error');
-                    return;
-                }
+                    // Validation
+                    if (!employeeId) {
+                        showAlert('Employee ID is required.', 'error');
+                        return;
+                    }
+                    if (!fullName) {
+                        showAlert('Full name is required.', 'error');
+                        return;
+                    }
+                    if (!department) {
+                        showAlert('Department is required.', 'error');
+                        return;
+                    }
+                    if (!position) {
+                        showAlert('Position is required.', 'error');
+                        return;
+                    }
 
-                // Check if employee already exists
-                if (db.employeeExists(employeeId)) {
-                    showAlert('Employee ID already exists. Please use a different ID.', 'error');
-                    return;
-                }
+                    // Check if employee already exists
+                    if (db.employeeExists(employeeId)) {
+                        showAlert('Employee ID already exists. Please use a different ID.', 'error');
+                        return;
+                    }
 
-                // Register employee
-                const employee = {
-                    employee_id: employeeId,
-                    full_name: fullName,
-                    department: department,
-                    position: position
-                };
+                    // Register employee
+                    const employee = {
+                        employee_id: employeeId,
+                        full_name: fullName,
+                        department: department,
+                        position: position
+                    };
 
-                if (db.addEmployee(employee)) {
-                    showAlert('Employee registered successfully!', 'success');
-                    form.reset();
-                } else {
-                    showAlert('Unable to register employee. Please try again.', 'error');
-                }
+                    if (db.addEmployee(employee)) {
+                        showAlert('Employee registered successfully!', 'success');
+                        form.reset();
+                    } else {
+                        showAlert('Unable to register employee. Please try again.', 'error');
+                    }
+                });
             });
         });
     </script>
 </body>
 </html>
+
+
 

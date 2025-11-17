@@ -56,7 +56,7 @@
 
     <footer>
         <div class="container">
-            <p>&copy; 2025 Attendance System - Employee Attendance System. All rights reserved.</p>
+            <p>&copy; 2023 Attendance System - Employee Attendance System. All rights reserved.</p>
         </div>
     </footer>
 
@@ -65,15 +65,18 @@
     <script>
         // Load statistics on page load
         document.addEventListener('DOMContentLoaded', function() {
-            const stats = db.getAttendanceStats();
-            
-            document.getElementById('total-employees').textContent = stats.total_employees;
-            document.getElementById('present-today').textContent = stats.present_today;
-            document.getElementById('absent-today').textContent = stats.absent_today;
-            document.getElementById('attendance-rate').textContent = stats.attendance_rate_today + '%';
+            db.ready.then(() => {
+                const stats = db.getAttendanceStats();
+                
+                document.getElementById('total-employees').textContent = stats.total_employees;
+                document.getElementById('present-today').textContent = stats.present_today;
+                document.getElementById('absent-today').textContent = stats.absent_today;
+                document.getElementById('attendance-rate').textContent = stats.attendance_rate_today + '%';
+            });
         });
     </script>
 </body>
 </html>
+
 
 

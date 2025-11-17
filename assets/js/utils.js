@@ -128,11 +128,17 @@ function exportAttendanceToCSV(startDate, endDate) {
             'Department': emp.department,
             'Position': emp.position
         };
-        
+
+        let totalPresent = 0;
         dateRange.forEach(date => {
-            row[date] = attendanceMap[emp.employee_id]?.[date] || '';
+            const value = attendanceMap[emp.employee_id]?.[date] || '';
+            row[date] = value;
+            if (value) {
+                totalPresent += 1;
+            }
         });
-        
+
+        row['Total Days Present'] = totalPresent;
         csvData.push(row);
     });
     

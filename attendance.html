@@ -43,7 +43,7 @@
 
     <footer>
         <div class="container">
-            <p>&copy; 2025 Attendance System - Employee Attendance System. All rights reserved.</p>
+            <p>&copy; 2023 Attendance System - Employee Attendance System. All rights reserved.</p>
         </div>
     </footer>
 
@@ -51,49 +51,52 @@
     <script src="assets/js/utils.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const form = document.getElementById('attendance-form');
-            const resultDiv = document.getElementById('attendance-result');
+            db.ready.then(() => {
+                const form = document.getElementById('attendance-form');
+                const resultDiv = document.getElementById('attendance-result');
 
-            form.addEventListener('submit', function(e) {
-                e.preventDefault();
-                
-                const employeeId = document.getElementById('employee_id').value.trim();
-                
-                if (!employeeId) {
-                    resultDiv.innerHTML = '<div class="alert alert-error">Please enter your Employee ID.</div>';
-                    return;
-                }
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const employeeId = document.getElementById('employee_id').value.trim();
+                    
+                    if (!employeeId) {
+                        resultDiv.innerHTML = '<div class="alert alert-error">Please enter your Employee ID.</div>';
+                        return;
+                    }
 
-                // Check if employee exists
-                const employee = db.getEmployee(employeeId);
-                if (!employee) {
-                    resultDiv.innerHTML = '<div class="alert alert-error">Employee not found. Please verify your Employee ID.</div>';
-                    return;
-                }
+                    // Check if employee exists
+                    const employee = db.getEmployee(employeeId);
+                    if (!employee) {
+                        resultDiv.innerHTML = '<div class="alert alert-error">Employee not found. Please verify your Employee ID.</div>';
+                        return;
+                    }
 
-                // Check if attendance already marked today
-                if (db.hasAttendanceToday(employeeId)) {
-                    resultDiv.innerHTML = '<div class="alert alert-error">Attendance already marked for today!</div>';
-                    return;
-                }
+                    // Check if attendance already marked today
+                    if (db.hasAttendanceToday(employeeId)) {
+                        resultDiv.innerHTML = '<div class="alert alert-error">Attendance already marked for today!</div>';
+                        return;
+                    }
 
-                // Mark attendance
-                if (db.markAttendance(employeeId)) {
-                    const now = new Date();
-                    resultDiv.innerHTML = `
-                        <div class="alert alert-success">
-                            Attendance marked successfully for ${employee.full_name}!<br>
-                            Time: ${formatTime(now.toISOString())}
-                        </div>
-                    `;
-                    form.reset();
-                } else {
-                    resultDiv.innerHTML = '<div class="alert alert-error">Unable to mark attendance. Please try again.</div>';
-                }
+                    // Mark attendance
+                    if (db.markAttendance(employeeId)) {
+                        const now = new Date();
+                        resultDiv.innerHTML = `
+                            <div class="alert alert-success">
+                                Attendance marked successfully for ${employee.full_name}!<br>
+                                Time: ${formatTime(now.toISOString())}
+                            </div>
+                        `;
+                        form.reset();
+                    } else {
+                        resultDiv.innerHTML = '<div class="alert alert-error">Unable to mark attendance. Please try again.</div>';
+                    }
+                });
             });
         });
     </script>
 </body>
 </html>
+
 
 

@@ -99,6 +99,32 @@
             </div>
 
             <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                    <h2 style="margin: 0;">All Attendance Records (data.json)</h2>
+                    <button id="reload-data-btn" class="btn" style="min-width: 180px;">Reload data.json</button>
+                </div>
+                <p style="margin-top: 0.5rem; color: var(--gray);">
+                    This table displays every attendance entry stored in the root JSON file.
+                </p>
+                <div class="table-container">
+                    <table id="all-attendance-table">
+                        <thead>
+                            <tr>
+                                <th>Employee ID</th>
+                                <th>Name</th>
+                                <th>Department</th>
+                                <th>Position</th>
+                                <th>Date</th>
+                                <th>Check-in Time</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="all-attendance-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card">
                 <h2>Quick Actions</h2>
                 <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
                     <a href="register.html" class="btn">Register New Employee</a>
@@ -151,7 +177,7 @@
 
     <footer>
         <div class="container">
-            <p>&copy; 2025 Attendance System - Employee Attendance System. All rights reserved.</p>
+            <p>&copy; 2023 Attendance System - Employee Attendance System. All rights reserved.</p>
         </div>
     </footer>
 
@@ -165,89 +191,113 @@
         }
 
         document.addEventListener('DOMContentLoaded', function() {
-            // Set admin username
-            const session = auth.getSession();
-            if (session) {
-                document.getElementById('admin-username').textContent = session.username;
-            }
-
-            // Set today's date
-            const today = new Date();
-            document.getElementById('today-date').textContent = today.toLocaleDateString('en-US', { 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-            });
-
-            // Load statistics
-            loadStatistics();
-            
-            // Load department attendance
-            loadDepartmentAttendance();
-            
-            // Load today's attendance
-            loadTodaysAttendance();
-            
-            // Load employees for manual entry
-            loadEmployeesForManualEntry();
-
-            // Set default dates for export
-            const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-            document.getElementById('start_date').value = firstDay.toISOString().split('T')[0];
-            document.getElementById('end_date').value = today.toISOString().split('T')[0];
-            document.getElementById('manual_date').value = today.toISOString().split('T')[0];
-            document.getElementById('manual_time').value = today.toTimeString().slice(0, 5);
-
-            // Manual attendance form
-            document.getElementById('manual-attendance-form').addEventListener('submit', function(e) {
-                e.preventDefault();
-                const employeeId = document.getElementById('manual_employee_id').value;
-                const date = document.getElementById('manual_date').value;
-                const time = document.getElementById('manual_time').value;
-
-                if (!employeeId) {
-                    showAlert('Please select an employee.', 'error');
-                    return;
+            db.ready.then(() => {
+                // Set admin username
+                const session = auth.getSession();
+                if (session) {
+                    document.getElementById('admin-username').textContent = session.username;
                 }
 
-                const employee = db.getEmployee(employeeId);
-                if (!employee) {
-                    showAlert('Employee not found.', 'error');
-                    return;
-                }
+                // Set today's date
+                const today = new Date();
+                document.getElementById('today-date').textContent = today.toLocaleDateString('en-US', { 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                });
 
-                // Check if attendance already exists for this date
-                if (db.hasAttendanceOnDate(employeeId, date)) {
-                    showAlert('Attendance already recorded for this employee on the selected date.', 'error');
-                    return;
-                }
+                // Load statistics
+                loadStatistics();
+                
+                // Load department attendance
+                loadDepartmentAttendance();
+                
+                // Load today's attendance
+                loadTodaysAttendance();
+                loadAllAttendanceRecords();
 
-                // Mark attendance with custom date/time
-                const dateTime = `${date}T${time}:00`;
-                if (db.markAttendance(employeeId, dateTime)) {
-                    showAlert(`Attendance recorded for ${employee.full_name} (${employeeId}).`, 'success');
-                    loadTodaysAttendance();
-                    loadStatistics();
-                    loadDepartmentAttendance();
-                } else {
-                    showAlert('Unable to record attendance. Please try again.', 'error');
-                }
-            });
+                // Load employees for manual entry
+                loadEmployeesForManualEntry();
 
-            // Export form
-            document.getElementById('export-form').addEventListener('submit', function(e) {
-                e.preventDefault();
-                const startDate = document.getElementById('start_date').value;
-                const endDate = document.getElementById('end_date').value;
-                exportAttendanceToCSV(startDate, endDate);
-                showAlert('Attendance data exported successfully!', 'success');
-            });
+                // Set default dates for export
+                const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+                document.getElementById('start_date').value = firstDay.toISOString().split('T')[0];
+                document.getElementById('end_date').value = today.toISOString().split('T')[0];
+                document.getElementById('manual_date').value = today.toISOString().split('T')[0];
+                document.getElementById('manual_time').value = today.toTimeString().slice(0, 5);
 
-            // Logout
-            document.getElementById('logout-link').addEventListener('click', function(e) {
-                e.preventDefault();
-                auth.logout();
-                window.location.href = 'admin_login.html';
+                document.getElementById('reload-data-btn').addEventListener('click', async function() {
+                    const loadingText = this.textContent;
+                    this.textContent = 'Reloading...';
+                    this.disabled = true;
+                    const refreshed = await db.reloadFromDataFile();
+                    this.textContent = loadingText;
+                    this.disabled = false;
+
+                    if (refreshed) {
+                        showAlert('Data reloaded from data.json.', 'success');
+                        loadStatistics();
+                        loadDepartmentAttendance();
+                        loadTodaysAttendance();
+                        loadAllAttendanceRecords();
+                        loadEmployeesForManualEntry();
+                    } else {
+                        showAlert('Unable to reload data.json. Please try again.', 'error');
+                    }
+                });
+
+                // Manual attendance form
+                document.getElementById('manual-attendance-form').addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const employeeId = document.getElementById('manual_employee_id').value;
+                    const date = document.getElementById('manual_date').value;
+                    const time = document.getElementById('manual_time').value;
+
+                    if (!employeeId) {
+                        showAlert('Please select an employee.', 'error');
+                        return;
+                    }
+
+                    const employee = db.getEmployee(employeeId);
+                    if (!employee) {
+                        showAlert('Employee not found.', 'error');
+                        return;
+                    }
+
+                    // Check if attendance already exists for this date
+                    if (db.hasAttendanceOnDate(employeeId, date)) {
+                        showAlert('Attendance already recorded for this employee on the selected date.', 'error');
+                        return;
+                    }
+
+                    // Mark attendance with custom date/time
+                    const dateTime = `${date}T${time}:00`;
+                    if (db.markAttendance(employeeId, dateTime)) {
+                        showAlert(`Attendance recorded for ${employee.full_name} (${employeeId}).`, 'success');
+                        loadTodaysAttendance();
+                        loadStatistics();
+                        loadDepartmentAttendance();
+                        loadAllAttendanceRecords();
+                    } else {
+                        showAlert('Unable to record attendance. Please try again.', 'error');
+                    }
+                });
+
+                // Export form
+                document.getElementById('export-form').addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const startDate = document.getElementById('start_date').value;
+                    const endDate = document.getElementById('end_date').value;
+                    exportAttendanceToCSV(startDate, endDate);
+                    showAlert('Attendance data exported successfully!', 'success');
+                });
+
+                // Logout
+                document.getElementById('logout-link').addEventListener('click', function(e) {
+                    e.preventDefault();
+                    auth.logout();
+                    window.location.href = 'admin_login.html';
+                });
             });
         });
 
@@ -339,13 +389,54 @@
                 loadTodaysAttendance();
                 loadStatistics();
                 loadDepartmentAttendance();
+                loadAllAttendanceRecords();
             } else {
                 showAlert('Unable to delete attendance record. Please try again.', 'error');
             }
         }
 
+        function loadAllAttendanceRecords() {
+            const attendance = db.getAttendance();
+            const employees = db.getEmployees();
+            const tbody = document.getElementById('all-attendance-tbody');
+
+            if (!attendance.length || !employees.length) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No attendance data available.</td></tr>';
+                return;
+            }
+
+            const employeeMap = {};
+            employees.forEach(emp => {
+                employeeMap[emp.employee_id] = emp;
+            });
+
+            const rows = attendance
+                .slice()
+                .sort((a, b) => new Date(b.check_in) - new Date(a.check_in))
+                .map(att => {
+                    const emp = employeeMap[att.employee_id];
+                    if (!emp) {
+                        return '';
+                    }
+                    const dateOnly = att.check_in ? att.check_in.split('T')[0] : '';
+                    return `
+                        <tr>
+                            <td>${emp.employee_id}</td>
+                            <td>${emp.full_name}</td>
+                            <td>${emp.department}</td>
+                            <td>${emp.position}</td>
+                            <td>${formatDate(dateOnly)}</td>
+                            <td>${formatTime(att.check_in)}</td>
+                            <td class="status-${att.status}">${att.status.charAt(0).toUpperCase() + att.status.slice(1)}</td>
+                        </tr>
+                    `;
+                })
+                .join('');
+
+            tbody.innerHTML = rows || '<tr><td colspan="7" style="text-align: center;">No attendance data available.</td></tr>';
+        }
+
     </script>
 </body>
 </html>
-
 
